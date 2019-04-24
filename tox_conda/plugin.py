@@ -87,6 +87,13 @@ def venv_lookup(self, name):
     return py.path.local.sysfind(name, paths=paths)
 
 
+def get_channels(venv):
+    # Ensure a channel is always specified for when the `--override-channels`
+    # flag is used.
+    channels = venv.envconfig.conda_channels
+    return channels or ["defaults"]
+
+
 @hookimpl
 def tox_testenv_create(venv, action):
     tox.venv.cleanup_for_venv(venv)
@@ -104,8 +111,8 @@ def tox_testenv_create(venv, action):
     # environments on Windows.
     venv._venv_lookup = types.MethodType(venv_lookup, venv)
 
-    args = [conda_exe, "create", "--yes", "-p", envdir]
-    for channel in venv.envconfig.conda_channels:
+    args = [conda_exe, "create", "--yes", "--override-channels", "-p", envdir]
+    for channel in get_channels(venv):
         args += ["--channel", channel]
     args += [python]
     venv._pcall(args, venv=False, action=action, cwd=basepath)
@@ -122,8 +129,8 @@ def install_conda_deps(venv, action, basepath, envdir):
 
     action.setactivity("installcondadeps", ", ".join(conda_deps))
 
-    args = [conda_exe, "install", "--yes", "-p", envdir]
-    for channel in venv.envconfig.conda_channels:
+    args = [conda_exe, "install", "--yes", "--override-channels", "-p", envdir]
+    for channel in get_channels(venv):
         args += ["--channel", channel]
     # We include the python version in the conda requirements in order to make
     # sure that none of the other conda requirements inadvertently downgrade
