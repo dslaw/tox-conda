@@ -18,7 +18,7 @@ def test_conda(cmd, initproj):
         return next((i for i, l in enumerate(result.outlines) if l.startswith(m)), None)
 
     assert any(
-        "create --yes -p " in l
+        "create --yes --override-channels -p " in l
         for l in result.outlines[index_of("py create: ") + 1 : index_of("py installed: ")]
     ), result.output()
 

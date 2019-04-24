@@ -23,9 +23,11 @@ def test_conda_create(newconfig, mocksession):
     assert "conda" in call.args[0]
     assert "create" == call.args[1]
     assert "--yes" == call.args[2]
-    assert "-p" == call.args[3]
-    assert venv.path == call.args[4]
-    assert call.args[5].startswith("python=")
+    assert "--override-channels" == call.args[3]
+    assert "-p" == call.args[4]
+    assert venv.path == call.args[5]
+    assert "--channel=defaults" == call.args[6]
+    assert call.args[7].startswith("python=")
 
 
 def create_test_env(config, mocksession, envname):
@@ -89,11 +91,12 @@ def test_install_conda_deps(newconfig, mocksession):
     call = pcalls[-2]
     conda_cmd = call.args
     assert "conda" in os.path.split(conda_cmd[0])[-1]
-    assert conda_cmd[1:5] == ["install", "--yes", "-p", venv.path]
+    assert conda_cmd[1:6] == ["install", "--yes", "--override-channels", "-p", venv.path]
+    assert conda_cmd[6] == "--channel=defaults"
     # Make sure that python is explicitly given as part of every conda install
     # in order to avoid inadvertant upgrades of python itself.
-    assert conda_cmd[5].startswith("python=")
-    assert conda_cmd[6:8] == ["pytest", "asdf"]
+    assert conda_cmd[7].startswith("python=")
+    assert conda_cmd[8:10] == ["pytest", "asdf"]
 
     pip_cmd = pcalls[-1].args
     assert pip_cmd[1:4] == ["-m", "pip", "install"]
@@ -124,7 +127,7 @@ def test_install_conda_no_pip(newconfig, mocksession):
     call = pcalls[-1]
     conda_cmd = call.args
     assert "conda" in os.path.split(conda_cmd[0])[-1]
-    assert conda_cmd[1:5] == ["install", "--yes", "-p", venv.path]
+    assert conda_cmd[1:6] == ["install", "--yes", "--override-channels", "-p", venv.path]
 
 
 def test_install_conda_no_channels(newconfig, mocksession):
