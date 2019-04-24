@@ -113,7 +113,7 @@ def tox_testenv_create(venv, action):
 
     args = [conda_exe, "create", "--yes", "--override-channels", "-p", envdir]
     for channel in get_channels(venv):
-        args += ["--channel", channel]
+        args += ["--channel={}".format(channel)]
     args += [python]
     venv._pcall(args, venv=False, action=action, cwd=basepath)
 
@@ -131,7 +131,7 @@ def install_conda_deps(venv, action, basepath, envdir):
 
     args = [conda_exe, "install", "--yes", "--override-channels", "-p", envdir]
     for channel in get_channels(venv):
-        args += ["--channel", channel]
+        args += ["--channel={}".format(channel)]
     # We include the python version in the conda requirements in order to make
     # sure that none of the other conda requirements inadvertently downgrade
     # python in this environment. If any of the requirements are in conflict
