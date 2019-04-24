@@ -127,6 +127,58 @@ def test_install_conda_no_pip(newconfig, mocksession):
     assert conda_cmd[1:5] == ["install", "--yes", "-p", venv.path]
 
 
+def test_install_conda_no_channels(newconfig, mocksession):
+    config = newconfig(
+        [],
+        """
+        [testenv:py123]
+        conda_deps=
+            pytest
+            asdf
+    """,
+    )
+
+    venv, action, pcalls = create_test_env(config, mocksession, "py123")
+
+    assert venv.envconfig.conda_channels == []
+
+    tox_testenv_install_deps(action=action, venv=venv)
+    assert len(pcalls) >= 1
+    call = pcalls[-1]
+    conda_cmd = call.args
+    assert "conda" in os.path.split(conda_cmd[0])[-1]
+    assert "--override-channels" in conda_cmd
+    assert "--channel=defaults" in conda_cmd
+
+
+def test_install_conda_channels(newconfig, mocksession):
+    config = newconfig(
+        [],
+        """
+        [testenv:py123]
+        conda_channels=
+            conda-forge
+        conda_deps=
+            pytest
+            asdf
+    """,
+    )
+
+    venv, action, pcalls = create_test_env(config, mocksession, "py123")
+
+    assert venv.envconfig.conda_channels == ["conda-forge"]
+
+    tox_testenv_install_deps(action=action, venv=venv)
+    assert len(pcalls) >= 1
+    call = pcalls[-1]
+    conda_cmd = call.args
+    assert "conda" in os.path.split(conda_cmd[0])[-1]
+    assert "--override-channels" in conda_cmd
+    channels = [arg for arg in conda_cmd if arg.startswith("--channel")]
+    assert len(channels) == 1
+    assert "--channel=conda-forge" in channels
+
+
 def test_update(tmpdir, newconfig, mocksession):
     pkg = tmpdir.ensure("package.tar.gz")
     config = newconfig(
